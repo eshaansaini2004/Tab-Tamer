@@ -1,0 +1,346 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    width: 400px;
+    min-height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+header p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.settings-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.settings-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+#main-content {
+    padding: 20px;
+}
+
+.primary-button {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.primary-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.secondary-button {
+    padding: 12px 20px;
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 5px;
+}
+
+.secondary-button:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.results {
+    margin-top: 20px;
+}
+
+.session-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.session-info h2 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.session-info p {
+    color: #6c757d;
+    line-height: 1.5;
+}
+
+.clusters {
+    margin-bottom: 20px;
+}
+
+.cluster {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.cluster-header {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.cluster-title {
+    font-weight: 600;
+    color: #495057;
+}
+
+.cluster-count {
+    background: #667eea;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.cluster-summary {
+    padding: 12px 16px;
+    color: #6c757d;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Sub-category styles */
+.sub-category {
+    margin-bottom: 16px;
+    border-left: 3px solid #e9ecef;
+    padding-left: 12px;
+}
+
+.sub-category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px 0;
+}
+
+.sub-category-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+.sub-category-count {
+    background: #e9ecef;
+    color: #6c757d;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.sub-category-tabs {
+    margin-left: 8px;
+}
+
+.sub-category-tabs .tab-item {
+    margin-bottom: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.sub-category-tabs .tab-item:last-child {
+    border-bottom: none;
+}
+
+.tabs-list {
+    padding: 0 16px 16px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.tabs-list.expanded {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.tab-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.tab-item:last-child {
+    border-bottom: none;
+}
+
+.tab-favicon {
+    width: 16px;
+    height: 16px;
+    margin-right: 12px;
+    margin-top: 2px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.tab-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.tab-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    text-decoration: none;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tab-title:hover {
+    color: #667eea;
+}
+
+.tab-description {
+    font-size: 11px;
+    color: #6c757d;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.cluster-actions {
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.action-button {
+    padding: 6px 12px;
+    background: white;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.action-button:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-1px);
+}
+
+.action-button:active {
+    transform: translateY(0);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.chevron {
+    transition: transform 0.2s;
+}
+
+.chevron.expanded {
+    transform: rotate(180deg);
+}

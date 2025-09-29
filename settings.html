@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Tamer Settings</title>
+    <link rel="stylesheet" href="popup.css">
+    <style>
+        .settings-container {
+            width: 500px;
+            min-height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .settings-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .settings-content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-help {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .step-content {
+            margin-left: 34px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <div class="settings-header">
+            <h1>⚙️ Tab Tamer Settings</h1>
+            <p>Configure your Notion integration</p>
+        </div>
+        
+        <div class="settings-content">
+            <div id="status" class="status hidden"></div>
+            
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Create Notion Integration
+                </div>
+                <div class="step-content">
+                    <p>1. Go to <a href="https://notion.so/my-integrations" target="_blank">notion.so/my-integrations</a></p>
+                    <p>2. Click "New integration"</p>
+                    <p>3. Give it a name like "Tab Tamer"</p>
+                    <p>4. Select your workspace</p>
+                    <p>5. Click "Submit" and copy the "Internal Integration Token"</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Create Notion Database
+                </div>
+                <div class="step-content">
+                    <p>1. In Notion, create a new page</p>
+                    <p>2. Add a database with these properties:</p>
+                    <ul>
+                        <li><strong>Title</strong> (Title)</li>
+                        <li><strong>Summary</strong> (Text)</li>
+                        <li><strong>Date</strong> (Date)</li>
+                        <li><strong>Tab Count</strong> (Number)</li>
+                        <li><strong>Cluster Count</strong> (Number)</li>
+                    </ul>
+                    <p>3. Copy the database ID from the URL (the long string after the last slash)</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Configure Tab Tamer
+                </div>
+                <div class="step-content">
+                    <div class="form-group">
+                        <label class="form-label" for="notionToken">Notion Integration Token</label>
+                        <input type="password" id="notionToken" class="form-input" placeholder="secret_...">
+                        <div class="form-help">Your Notion integration token (starts with "secret_")</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="notionDatabaseId">Notion Database ID</label>
+                        <input type="text" id="notionDatabaseId" class="form-input" placeholder="32-character-database-id">
+                        <div class="form-help">The database ID from your Notion database URL</div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button id="saveSettings" class="btn btn-primary">Save Settings</button>
+                        <button id="testConnection" class="btn btn-secondary">Test Connection</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Share Database with Integration
+                </div>
+                <div class="step-content">
+                    <p>1. Go to your Notion database</p>
+                    <p>2. Click "Share" in the top right</p>
+                    <p>3. Click "Add people, emails, groups, or integrations"</p>
+                    <p>4. Search for "Tab Tamer" and select your integration</p>
+                    <p>5. Give it "Can edit" permissions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="settings.js"></script>
+</body>
+</html>

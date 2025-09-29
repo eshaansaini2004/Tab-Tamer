@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Tamer",
+  "version": "1.0.2",
+  "description": "AI-powered browser extension to organize and summarize your research sessions",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Tab Tamer - Organize Your Research"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["readability.js", "settings.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
