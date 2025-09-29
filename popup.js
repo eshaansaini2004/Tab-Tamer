@@ -74,6 +74,10 @@ class TabTamerPopup {
     displayResults(data) {
         const { session_summary, suggested_title, clusters } = data;
 
+        // Store the complete session data for closing tabs later
+        this.currentSessionData = data;
+        window.currentSessionData = data; // Store globally for easy access
+
         // Update session info
         document.getElementById('session-title').textContent = suggested_title;
         document.getElementById('session-summary').textContent = session_summary;
@@ -573,17 +577,12 @@ class TabTamerPopup {
     }
 
     getCurrentSessionData() {
-        // Get the current session data from the displayed results
-        const title = document.getElementById('session-title').textContent;
-        const summary = document.getElementById('session-summary').textContent;
-        const clusters = Array.from(document.querySelectorAll('.cluster')).map(cluster => {
-            const title = cluster.querySelector('.cluster-title').textContent;
-            const summary = cluster.querySelector('.cluster-summary').textContent;
-            const tabCount = cluster.querySelector('.cluster-count').textContent;
-            return { title, summary, tabCount };
-        });
-
-        return { title, summary, clusters };
+        // Return the stored session data that includes tab indexes
+        return this.currentSessionData || window.currentSessionData || {
+            session_summary: '',
+            suggested_title: '',
+            clusters: []
+        };
     }
 
     resetPopup() {

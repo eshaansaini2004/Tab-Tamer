@@ -21,6 +21,11 @@ class TabTamerAgent {
                     sendResponse(saveResult);
                     break;
                 
+                case 'closeClusteredTabs':
+                    const closeResult = await this.closeClusteredTabs(request.data);
+                    sendResponse(closeResult);
+                    break;
+                
                 default:
                     sendResponse({ success: false, error: 'Unknown action' });
             }
@@ -281,6 +286,57 @@ class TabTamerAgent {
     async saveToNotion(sessionData) {
         // Notion integration logic here
         return { success: true, message: 'Notion integration pending' };
+    }
+
+    async closeClusteredTabs(sessionData) {
+        try {
+            console.log('Closing clustered tabs...');
+            
+            if (!sessionData || !sessionData.clusters) {
+                throw new Error('No session data provided');
+            }
+
+            // Get all tab indexes from all clusters
+            const tabIndexesToClose = [];
+            sessionData.clusters.forEach(cluster => {
+                if (cluster.tab_indexes && Array.isArray(cluster.tab_indexes)) {
+                    tabIndexesToClose.push(...cluster.tab_indexes);
+                }
+            });
+
+            console.log(`Found ${tabIndexesToClose.length} tabs to close`);
+
+            // Get all current tabs
+            const allTabs = await chrome.tabs.query({});
+            
+            // Close tabs by their indexes
+            let closedCount = 0;
+            for (const index of tabIndexesToClose) {
+                if (index >= 0 && index < allTabs.length) {
+                    try {
+                        await chrome.tabs.remove(allTabs[index].id);
+                        closedCount++;
+                    } catch (error) {
+                        console.warn(`Failed to close tab at index ${index}:`, error);
+                    }
+                }
+            }
+
+            console.log(`Successfully closed ${closedCount} tabs`);
+
+            return {
+                success: true,
+                closedCount: closedCount,
+                message: `Closed ${closedCount} tabs successfully`
+            };
+
+        } catch (error) {
+            console.error('Error closing tabs:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
     }
 }
 
