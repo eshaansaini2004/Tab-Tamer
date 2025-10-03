@@ -46,3 +46,13 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Extension specific
+*.crx
+*.pem
+*.zip
+
+# Backup files
+*.bak
+*.backup
+*~

@@ -1,16 +1,35 @@
 {
   "name": "tab-tamer",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "AI-powered browser extension to organize and summarize your research sessions",
   "main": "index.js",
+  "homepage": "https://github.com/yourusername/tab-tamer#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/tab-tamer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/tab-tamer/issues"
+  },
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "test": "node test/test-extraction.js",
     "setup": "node setup.js",
-    "demo": "node demo-fixed-grouping.js"
+    "clean": "rm -rf dist/",
+    "rebuild": "npm run clean && npm run build"
   },
-  "keywords": ["browser-extension", "ai", "research", "organization", "tabs"],
+  "keywords": [
+    "browser-extension",
+    "chrome-extension",
+    "ai",
+    "research",
+    "organization",
+    "tabs",
+    "notion",
+    "productivity",
+    "categorization",
+    "automation"
+  ],
   "author": "Tab Tamer Team",
   "license": "MIT",
   "devDependencies": {
@@ -27,5 +46,9 @@
     "openai": "^4.0.0",
     "@notionhq/client": "^2.2.0",
     "@mozilla/readability": "^0.4.4"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }

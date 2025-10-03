@@ -1,7 +1,11 @@
 // COMPLETE REWRITE following original instructions
 
+// Import Notion service (will be bundled by webpack)
+// Note: NotionService is defined inline below for simplicity
+
 class TabTamerAgent {
     constructor() {
+        this.notionService = new NotionService();
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             this.handleMessage(request, sender, sendResponse);
             return true;
@@ -67,6 +71,9 @@ class TabTamerAgent {
 
         // Generate response following EXACT instructions
         const response = this.generateResponse(tabContents);
+        
+        // Include tabContents in response for Notion integration
+        response.tabContents = tabContents;
         
         return response;
     }
@@ -284,8 +291,7 @@ class TabTamerAgent {
     }
 
     async saveToNotion(sessionData) {
-        // Notion integration logic here
-        return { success: true, message: 'Notion integration pending' };
+        return await this.notionService.saveSession(sessionData);
     }
 
     async closeClusteredTabs(sessionData) {
@@ -336,6 +342,282 @@ class TabTamerAgent {
                 success: false,
                 error: error.message
             };
+        }
+    }
+}
+
+// ============================================================================
+// NOTION INTEGRATION SERVICE
+// ============================================================================
+
+class NotionService {
+    constructor() {
+        this.DATABASE_TITLE = 'Tab Tamer Sessions';
+        this.NOTION_VERSION = '2022-06-28';
+    }
+
+    async saveSession(sessionData) {
+        try {
+            console.log('Starting Notion save process...');
+            
+            const { notionToken, notionParentPageId } = await chrome.storage.sync.get(['notionToken', 'notionParentPageId']);
+            
+            if (!notionToken) {
+                throw new Error('Notion token not configured. Please go to Settings.');
+            }
+            
+            if (!notionParentPageId) {
+                throw new Error('Notion parent page not configured. Please go to Settings.');
+            }
+            
+            const databaseId = await this.findOrCreateDatabase(notionToken, notionParentPageId);
+            const result = await this.saveSessionToDatabase(notionToken, databaseId, sessionData);
+            
+            return {
+                success: true,
+                message: 'Session saved to Notion successfully!',
+                pageUrl: result.url
+            };
+            
+        } catch (error) {
+            console.error('Error saving to Notion:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    async findOrCreateDatabase(notionToken, parentPageId) {
+        try {
+            console.log('Finding or creating Tab Tamer database...');
+            
+            const searchResponse = await fetch('https://api.notion.com/v1/search', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Notion-Version': this.NOTION_VERSION,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    filter: { value: 'database', property: 'object' },
+                    query: this.DATABASE_TITLE
+                })
+            });
+            
+            if (!searchResponse.ok) {
+                throw new Error(`Notion search failed: ${searchResponse.statusText}`);
+            }
+            
+            const searchData = await searchResponse.json();
+            
+            for (const result of searchData.results) {
+                if (result.object === 'database' && 
+                    result.title && 
+                    result.title[0] && 
+                    result.title[0].plain_text === this.DATABASE_TITLE) {
+                    console.log('✅ Found existing database:', result.id);
+                    return result.id;
+                }
+            }
+            
+            console.log('Creating new "Tab Tamer Sessions" database...');
+            
+            const createResponse = await fetch('https://api.notion.com/v1/databases', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Notion-Version': this.NOTION_VERSION,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    parent: { type: 'page_id', page_id: parentPageId },
+                    title: [{ type: 'text', text: { content: this.DATABASE_TITLE } }],
+                    properties: {
+                        'Session Title': { title: {} },
+                        'Summary': { rich_text: {} },
+                        'Date': { date: {} },
+                        'Tab Count': { number: { format: 'number' } },
+                        'Category Count': { number: { format: 'number' } }
+                    }
+                })
+            });
+            
+            if (!createResponse.ok) {
+                const errorData = await createResponse.json();
+                throw new Error(`Failed to create database: ${errorData.message || createResponse.statusText}`);
+            }
+            
+            const newDatabase = await createResponse.json();
+            console.log('✅ Created new database:', newDatabase.id);
+            
+            await chrome.storage.sync.set({ notionDatabaseId: newDatabase.id });
+            
+            return newDatabase.id;
+            
+        } catch (error) {
+            console.error('❌ Error in findOrCreateDatabase:', error);
+            throw error;
+        }
+    }
+
+    async saveSessionToDatabase(notionToken, databaseId, sessionData) {
+        try {
+            console.log('Saving session to Notion database...');
+            
+            const totalTabs = sessionData.clusters.reduce((sum, cluster) => sum + cluster.tab_indexes.length, 0);
+            const categoryCount = sessionData.clusters.length;
+            
+            const children = this.buildPageContent(sessionData);
+            
+            const createPageResponse = await fetch('https://api.notion.com/v1/pages', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Notion-Version': this.NOTION_VERSION,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    parent: { database_id: databaseId },
+                    properties: {
+                        'Session Title': {
+                            title: [{ text: { content: sessionData.suggested_title || 'Tab Tamer Session' } }]
+                        },
+                        'Summary': {
+                            rich_text: [{ text: { content: sessionData.session_summary || 'No summary available' } }]
+                        },
+                        'Date': {
+                            date: { start: new Date().toISOString().split('T')[0] }
+                        },
+                        'Tab Count': { number: totalTabs },
+                        'Category Count': { number: categoryCount }
+                    },
+                    children: children.slice(0, 100)
+                })
+            });
+            
+            if (!createPageResponse.ok) {
+                const errorData = await createPageResponse.json();
+                throw new Error(`Failed to create page: ${errorData.message || createPageResponse.statusText}`);
+            }
+            
+            const newPage = await createPageResponse.json();
+            console.log('✅ Successfully created Notion page:', newPage.url);
+            
+            if (children.length > 100) {
+                console.log(`📝 Appending ${children.length - 100} remaining blocks...`);
+                await this.appendRemainingBlocks(notionToken, newPage.id, children.slice(100));
+            }
+            
+            return { id: newPage.id, url: newPage.url };
+            
+        } catch (error) {
+            console.error('❌ Error in saveSessionToDatabase:', error);
+            throw error;
+        }
+    }
+
+    buildPageContent(sessionData) {
+        const children = [{
+            object: 'block',
+            type: 'paragraph',
+            paragraph: {
+                rich_text: [{ type: 'text', text: { content: 'This session contains your organized tabs grouped by category and source.' } }]
+            }
+        }];
+        
+        for (const cluster of sessionData.clusters) {
+            children.push({
+                object: 'block',
+                type: 'heading_2',
+                heading_2: {
+                    rich_text: [{ type: 'text', text: { content: cluster.cluster_title } }]
+                }
+            });
+            
+            if (cluster.cluster_summary) {
+                children.push({
+                    object: 'block',
+                    type: 'paragraph',
+                    paragraph: {
+                        rich_text: [{ type: 'text', text: { content: cluster.cluster_summary }, annotations: { italic: true } }]
+                    }
+                });
+            }
+            
+            if (cluster.sub_categories && cluster.sub_categories.length > 0) {
+                for (const subCategory of cluster.sub_categories) {
+                    children.push({
+                        object: 'block',
+                        type: 'heading_3',
+                        heading_3: {
+                            rich_text: [{ type: 'text', text: { content: `${subCategory.source_name} (${subCategory.tab_indexes.length} tabs)` } }]
+                        }
+                    });
+                    
+                    this.addTabBullets(children, sessionData, subCategory.tab_indexes);
+                }
+            } else {
+                this.addTabBullets(children, sessionData, cluster.tab_indexes);
+            }
+        }
+        
+        return children;
+    }
+
+    addTabBullets(children, sessionData, tabIndexes) {
+        for (const tabIndex of tabIndexes) {
+            const tab = sessionData.tabContents ? sessionData.tabContents[tabIndex] : null;
+            
+            if (tab && tab.url) {
+                const bulletBlock = {
+                    object: 'block',
+                    type: 'bulleted_list_item',
+                    bulleted_list_item: {
+                        rich_text: [{
+                            type: 'text',
+                            text: {
+                                content: tab.meaningful_title || tab.title || 'Untitled',
+                                link: { url: tab.url }
+                            }
+                        }]
+                    }
+                };
+                
+                if (tab.specific_description) {
+                    bulletBlock.bulleted_list_item.children = [{
+                        object: 'block',
+                        type: 'paragraph',
+                        paragraph: {
+                            rich_text: [{
+                                type: 'text',
+                                text: { content: tab.specific_description },
+                                annotations: { color: 'gray' }
+                            }]
+                        }
+                    }];
+                }
+                
+                children.push(bulletBlock);
+            }
+        }
+    }
+
+    async appendRemainingBlocks(notionToken, pageId, remainingBlocks) {
+        for (let i = 0; i < remainingBlocks.length; i += 100) {
+            const batch = remainingBlocks.slice(i, Math.min(i + 100, remainingBlocks.length));
+            
+            console.log(`📝 Appending batch ${Math.floor(i/100) + 1}: ${batch.length} blocks`);
+            
+            await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Notion-Version': this.NOTION_VERSION,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ children: batch })
+            });
         }
     }
 }
